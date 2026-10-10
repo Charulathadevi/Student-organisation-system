@@ -1,90 +1,56 @@
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-
-:root {
-  font-family: "Inter", Arial, sans-serif;
-  color: #202235;
-  background: #f5f6fa;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-}
-
+/* Global CSS reset */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
+/* Main page styling */
+html,
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  width: 100%;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f6fb;
+  color: #14213d;
 }
 
+/* React root */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Buttons and form elements */
 button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
 }
 
+/* Buttons */
 button {
   cursor: pointer;
 }
 
-h1,
-h2,
-h3,
-p {
-  margin-top: 0;
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-h1 {
-  font-size: 28px;
-  margin-bottom: 0;
+/* Form fields */
+input,
+select,
+textarea {
+  outline: none;
 }
 
-h2 {
-  font-size: 23px;
-  margin-bottom: 8px;
-}
-
-p {
-  line-height: 1.6;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 16px 20px;
-  border-bottom: 1px solid #ececf2;
-}
-
-th {
-  color: #74788c;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-td {
-  font-size: 13px;
-}
-
-@media (max-width: 700px) {
-  h1 {
-    font-size: 22px;
-  }
-
-  th,
-  td {
-    padding: 12px;
-  }
+/* Images */
+img {
+  max-width: 100%;
+  display: block;
 }
