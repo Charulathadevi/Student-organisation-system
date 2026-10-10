@@ -1,0 +1,104 @@
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f5f9;
+  color: #1f2937;
+}
+
+header {
+  background: #172554;
+  color: white;
+  padding: 24px;
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: white;
+}
+
+button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: #1d4ed8;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover { background: #1e40af; }
+
+main {
+  max-width: 1100px;
+  margin: 25px auto;
+  padding: 0 18px;
+}
+
+.page {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #0000000d;
+}
+
+.hidden { display: none; }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.cards article {
+  background: #eff6ff;
+  padding: 18px;
+  border-radius: 8px;
+}
+
+.cards article p {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+input, textarea, select {
+  padding: 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+textarea { min-height: 75px; }
+
+li, .item {
+  background: #f8fafc;
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+
+@media (max-width: 600px) {
+  form { flex-direction: column; }
+  form input, form button, form select { width: 100%; }
+}
