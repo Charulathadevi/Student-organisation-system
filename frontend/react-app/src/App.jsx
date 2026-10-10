@@ -7,6 +7,7 @@ import {
   Route,
   NavLink,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
 
 import {
@@ -26,10 +27,15 @@ import {
   MapPin,
 } from "lucide-react";
 
-import "./App.css";
-
-// IMPORTANT: Change this path if Fundraisers.jsx is in another folder.
+import DashboardPage from "./pages/Dashboard";
+import Members from "./pages/Members";
+import Announcements from "./pages/Announcements";
+import Merchandise from "./pages/Merchandise";
 import Fundraisers from "./pages/Fundraisers";
+import Tasks from "./pages/Tasks";
+import Finance from "./pages/Finance";
+
+import "./App.css";
 
 const menu = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -42,12 +48,14 @@ const menu = [
   { name: "Finance", path: "/finance", icon: IndianRupee },
 ];
 
+// Main application layout
 function Layout({ children }) {
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-logo">S</div>
+
           <div>
             <h3>Skyline Association</h3>
             <p>Student Club Portal</p>
@@ -57,7 +65,7 @@ function Layout({ children }) {
         <nav className="navigation">
           {menu.map(({ name, path, icon: Icon }) => (
             <NavLink
-              key={name}
+              key={path}
               to={path}
               end={path === "/"}
               className={({ isActive }) =>
@@ -73,7 +81,7 @@ function Layout({ children }) {
         <div className="sidebar-footer">
           Student Organization System
           <br />
-          Demo workspace · Data saved in this browser
+          Manage your club in one place
         </div>
       </aside>
 
@@ -99,23 +107,7 @@ function Layout({ children }) {
   );
 }
 
-function SectionPage({ title }) {
-  return (
-    <section className="content">
-      <p className="eyebrow">SKYLINE STUDENT ASSOCIATION</p>
-      <h1>{title}</h1>
-      <p>Manage your club's {title.toLowerCase()} in one place.</p>
-
-      <div className="panel">
-        <h3>{title}</h3>
-        <p>
-          This page is ready for you to add {title.toLowerCase()} features.
-        </p>
-      </div>
-    </section>
-  );
-}
-
+// Events page
 function Events() {
   const [events, setEvents] = useState([
     {
@@ -161,12 +153,17 @@ function Events() {
     now.getMonth() + 1
   ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  const ticketsSold = events.reduce((sum, e) => sum + e.sold, 0);
+  const ticketsSold = events.reduce((sum, event) => sum + event.sold, 0);
+
   const seatsLeft = events.reduce(
-    (sum, e) => sum + e.capacity - e.sold,
+    (sum, event) => sum + event.capacity - event.sold,
     0
   );
-  const attendance = events.reduce((sum, e) => sum + e.attendance, 0);
+
+  const attendance = events.reduce(
+    (sum, event) => sum + event.attendance,
+    0
+  );
 
   function createEvent(e) {
     e.preventDefault();
@@ -215,8 +212,10 @@ function Events() {
     alert(`Check-in successful for ${event.name}!`);
   }
 
-  const filtered = events.filter((e) =>
-    `${e.name} ${e.venue}`.toLowerCase().includes(search.toLowerCase())
+  const filtered = events.filter((event) =>
+    `${event.name} ${event.venue}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
   return (
@@ -225,11 +224,14 @@ function Events() {
         <div>
           <p className="eyebrow">SKYLINE STUDENT ASSOCIATION</p>
           <h1>Events &amp; tickets</h1>
-          <p>Manage event capacity, ticket prices, check-ins, and attendance.</p>
+          <p>
+            Manage event capacity, ticket prices, check-ins, and attendance.
+          </p>
         </div>
 
         <button className="primary" onClick={() => setModal("create")}>
-          <Plus size={18} /> Create event
+          <Plus size={18} />
+          Create event
         </button>
       </div>
 
@@ -237,7 +239,11 @@ function Events() {
         <Stat title="Events" value={events.length} icon={<CalendarDays />} />
         <Stat title="Tickets sold" value={ticketsSold} icon={<Ticket />} />
         <Stat title="Seats remaining" value={seatsLeft} icon={<Clock />} />
-        <Stat title="Attendance recorded" value={attendance} icon={<Check />} />
+        <Stat
+          title="Attendance recorded"
+          value={attendance}
+          icon={<Check />}
+        />
       </div>
 
       <div className="panel event-panel">
@@ -249,7 +255,8 @@ function Events() {
           />
 
           <button className="primary" onClick={() => setModal("create")}>
-            <Plus size={18} /> Create event
+            <Plus size={18} />
+            Create event
           </button>
         </div>
 
@@ -271,13 +278,19 @@ function Events() {
                 <tr key={event.id}>
                   <td>
                     <strong>{event.name}</strong>
-                    <small><MapPin size={13} /> {event.venue}</small>
+                    <small>
+                      <MapPin size={13} />
+                      {event.venue}
+                    </small>
                   </td>
+
                   <td>{event.date}</td>
+
                   <td>
                     ₹{event.memberPrice} / ₹{event.guestPrice}
                     <small>Member / guest</small>
                   </td>
+
                   <td>
                     {event.sold} / {event.capacity}
                     <div className="progress">
@@ -291,7 +304,11 @@ function Events() {
                       />
                     </div>
                   </td>
-                  <td><span className="status">Scheduled</span></td>
+
+                  <td>
+                    <span className="status">Scheduled</span>
+                  </td>
+
                   <td>
                     <div className="actions">
                       <button
@@ -398,7 +415,10 @@ function Events() {
               >
                 Cancel
               </button>
-              <button className="primary" type="submit">Save</button>
+
+              <button className="primary" type="submit">
+                Save
+              </button>
             </div>
           </form>
         </Modal>
@@ -414,6 +434,7 @@ function Stat({ title, value, icon }) {
         <span>{title}</span>
         <div className="stat-icon">{icon}</div>
       </div>
+
       <h2>{value}</h2>
       <p>Updated just now</p>
     </div>
@@ -444,12 +465,14 @@ function Modal({ title, close, children }) {
             <X size={22} />
           </button>
         </div>
+
         {children}
       </div>
     </div>
   );
 }
 
+// Dashboard navigation
 function Dashboard() {
   const navigate = useNavigate();
 
@@ -478,33 +501,61 @@ function Dashboard() {
   );
 }
 
+// Application routes: each page uses its real JSX component
 function AppRoutes() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/fundraisers" element={<Fundraisers />} />
+        <Route
+          path="/"
+          element={<DashboardPage />}
+        />
 
-        {menu
-          .filter(
-            (item) =>
-              item.path !== "/" &&
-              item.path !== "/events" &&
-              item.path !== "/fundraisers"
-          )
-          .map((item) => (
-            <Route
-              key={item.path}
-              path={item.path}
-              element={<SectionPage title={item.name} />}
-            />
-          ))}
+        <Route
+          path="/members"
+          element={<Members />}
+        />
+
+        <Route
+          path="/events"
+          element={<Events />}
+        />
+
+        <Route
+          path="/announcements"
+          element={<Announcements />}
+        />
+
+        <Route
+          path="/merchandise"
+          element={<Merchandise />}
+        />
+
+        <Route
+          path="/fundraisers"
+          element={<Fundraisers />}
+        />
+
+        <Route
+          path="/tasks"
+          element={<Tasks />}
+        />
+
+        <Route
+          path="/finance"
+          element={<Finance />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
       </Routes>
     </Layout>
   );
 }
 
+// Root component
 export default function App() {
   return (
     <BrowserRouter>

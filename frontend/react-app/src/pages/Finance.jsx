@@ -6,6 +6,13 @@ import {
   addTransaction,
 } from "../services/api";
 
+const money = (value) =>
+  Number(value || 0).toLocaleString("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  });
+
 export default function Finance() {
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -14,7 +21,9 @@ export default function Finance() {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function loadFinance() {
     try {
@@ -39,8 +48,11 @@ export default function Finance() {
     loadFinance();
   }, []);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    setSuccess("");
 
     try {
       await addTransaction({
@@ -54,159 +66,216 @@ export default function Finance() {
       setCategory("");
       setAmount("");
       setDescription("");
+      setSuccess("Transaction saved successfully.");
       await loadFinance();
     } catch (err) {
       setError(err.message || "Unable to save transaction.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  return (
-    <div>
-      <h2>Finance</h2>
-      <p>Track income, expenses and financial transactions.</p>
+  const summaryItems = summary
+    ? Object.entries(summary)
+    : [];
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+  function formatSummaryValue(value) {
+    if (typeof value === "number") {
+      return money(value);
+    }
+
+    return String(value ?? "—");
+  }
+
+  return (
+    <div className="content feature-page finance-page">
+      <div className="heading-row">
+        <div>
+          <p className="eyebrow">FINANCIAL MANAGEMENT</p>
+          <h1>Finance</h1>
+          <p>Track income, expenses and financial transactions.</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="feature-alert feature-error" role="alert">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="feature-alert feature-success" role="status">
+          {success}
+        </div>
+      )}
 
       {loading ? (
-        <p>Loading finance data...</p>
+        <section className="panel">
+          <p className="feature-empty">Loading finance data...</p>
+        </section>
       ) : (
         <>
-          <div style={styles.summary}>
-            {summary &&
-              Object.entries(summary).map(([key, value]) => (
-                <article key={key} style={styles.card}>
-                  <p>{key.replaceAll("_", " ")}</p>
-                  <h3>
-                    {typeof value === "number"
-                      ? `₹${value.toLocaleString("en-IN")}`
-                      : String(value ?? "—")}
-                  </h3>
+          <section className="stats finance-stats">
+            {summaryItems.length > 0 ? (
+              summaryItems.map(([key, value], index) => (
+                <article className="stat-card" key={key}>
+                  <div className="stat-top">
+                    <span className="summary-label">
+                      {key
+                        .replaceAll("_", " ")
+                        .replace(/\b\w/g, (letter) =>
+                          letter.toUpperCase()
+                        )}
+                    </span>
+
+                    <span className="stat-icon">
+                      {index === 0 ? "₹" : index === 1 ? "↗" : "▤"}
+                    </span>
+                  </div>
+
+                  <h2>{formatSummaryValue(value)}</h2>
+                  <p>Current financial summary</p>
                 </article>
-              ))}
-          </div>
+              ))
+            ) : (
+              <article className="stat-card">
+                <div className="stat-top">Financial summary</div>
+                <h2>—</h2>
+                <p>No summary data available.</p>
+              </article>
+            )}
+          </section>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <h3>Add Transaction</h3>
-
-            <select
-              style={styles.input}
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-            >
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-
-            <input
-              style={styles.input}
-              placeholder="Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-            />
-
-            <input
-              style={styles.input}
-              type="number"
-              min="0.01"
-              step="0.01"
-              placeholder="Amount (₹)"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
-
-            <input
-              style={styles.input}
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-            />
-
-            <button style={styles.button} type="submit">
-              Save Transaction
-            </button>
-          </form>
-
-          <h3>Recent Transactions</h3>
-
-          {transactions.length === 0 ? (
-            <p>No transactions recorded yet.</p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.type}</td>
-                      <td>{item.category}</td>
-                      <td>
-                        ₹{Number(item.amount || 0).toLocaleString("en-IN")}
-                      </td>
-                      <td>{item.description}</td>
-                      <td>{item.transaction_date?.slice(0, 10)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section className="panel feature-form-panel">
+            <div className="feature-section-heading">
+              <div>
+                <h2>Add transaction</h2>
+                <p>Record money received or money spent.</p>
+              </div>
             </div>
-          )}
+
+            <form className="feature-form-grid" onSubmit={handleSubmit}>
+              <label className="feature-field">
+                Transaction type
+                <select
+                  value={type}
+                  onChange={(event) => setType(event.target.value)}
+                >
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </label>
+
+              <label className="feature-field">
+                Category *
+                <input
+                  placeholder="e.g. Membership fees"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="feature-field">
+                Amount (₹) *
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="feature-field">
+                Description *
+                <input
+                  placeholder="Transaction description"
+                  value={description}
+                  onChange={(event) =>
+                    setDescription(event.target.value)
+                  }
+                  required
+                />
+              </label>
+
+              <div className="feature-form-actions">
+                <button
+                  className="primary"
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "+ Save transaction"}
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section className="panel feature-list-panel">
+            <div className="feature-section-heading">
+              <div>
+                <h2>Recent transactions</h2>
+                <p>Review recorded financial activity.</p>
+              </div>
+
+              <span className="feature-count">
+                {transactions.length} transactions
+              </span>
+            </div>
+
+            {transactions.length === 0 ? (
+              <p className="feature-empty">
+                No transactions recorded yet.
+              </p>
+            ) : (
+              <div className="feature-table-wrap">
+                <table className="feature-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>Description</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {transactions.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <span
+                            className={`transaction-type ${
+                              String(item.type).toLowerCase() === "income"
+                                ? "transaction-income"
+                                : "transaction-expense"
+                            }`}
+                          >
+                            {item.type || "—"}
+                          </span>
+                        </td>
+
+                        <td>{item.category || "—"}</td>
+                        <td>
+                          <strong>{money(item.amount)}</strong>
+                        </td>
+                        <td>{item.description || "—"}</td>
+                        <td>
+                          {item.transaction_date
+                            ? String(item.transaction_date).slice(0, 10)
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </>
       )}
     </div>
   );
 }
-
-const styles = {
-  summary: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "15px",
-    margin: "20px 0",
-  },
-  card: {
-    padding: "18px",
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    overflowWrap: "anywhere",
-  },
-  form: {
-    display: "grid",
-    gap: "12px",
-    maxWidth: "550px",
-    padding: "20px",
-    margin: "25px 0",
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-  },
-  input: {
-    padding: "11px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  },
-  button: {
-    padding: "12px",
-    color: "#fff",
-    background: "#635bdb",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    background: "#fff",
-  },
-};

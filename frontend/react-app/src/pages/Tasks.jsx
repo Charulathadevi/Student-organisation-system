@@ -14,7 +14,9 @@ export default function Tasks() {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function loadTasks() {
     try {
@@ -32,8 +34,11 @@ export default function Tasks() {
     loadTasks();
   }, []);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    setSuccess("");
 
     try {
       await addTask({
@@ -48,15 +53,22 @@ export default function Tasks() {
       setAssignedTo("");
       setDueDate("");
       setPriority("Medium");
+      setSuccess("Task created successfully.");
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to create task.");
+    } finally {
+      setSaving(false);
     }
   }
 
   async function handleStatusChange(id, status) {
+    setError("");
+    setSuccess("");
+
     try {
       await updateTaskStatus(id, status);
+      setSuccess("Task status updated.");
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to update task.");
@@ -64,163 +76,227 @@ export default function Tasks() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
 
     try {
       await deleteTask(id);
+      setSuccess("Task deleted successfully.");
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to delete task.");
     }
   }
 
+  const pending = tasks.filter(
+    (task) => (task.status || "Pending") === "Pending"
+  ).length;
+
+  const inProgress = tasks.filter(
+    (task) => task.status === "In Progress"
+  ).length;
+
+  const completed = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length;
+
   return (
-    <div>
-      <h2>Tasks</h2>
-      <p>Assign work, monitor deadlines and track progress.</p>
+    <div className="content feature-page tasks-page">
+      <div className="heading-row">
+        <div>
+          <p className="eyebrow">WORK MANAGEMENT</p>
+          <h1>Tasks</h1>
+          <p>Assign work, monitor deadlines and track progress.</p>
+        </div>
+      </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <h3>Create Task</h3>
-
-        <input
-          style={styles.input}
-          placeholder="Task title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-
-        <input
-          style={styles.input}
-          placeholder="Assigned to"
-          value={assignedTo}
-          onChange={(e) => setAssignedTo(e.target.value)}
-          required
-        />
-
-        <label>
-          Due date
-          <input
-            style={styles.input}
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
-        </label>
-
-        <label>
-          Priority
-          <select
-            style={styles.input}
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          >
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-          </select>
-        </label>
-
-        <button style={styles.button} type="submit">
-          Create Task
-        </button>
-      </form>
-
-      <h3>Task List</h3>
-
-      {loading ? (
-        <p>Loading tasks...</p>
-      ) : tasks.length === 0 ? (
-        <p>No tasks created yet.</p>
-      ) : (
-        <div style={styles.grid}>
-          {tasks.map((task) => (
-            <article key={task.id} style={styles.card}>
-              <h3>{task.title}</h3>
-              <p>Assigned to: {task.assigned_to || "Unassigned"}</p>
-              <p>
-                Due date: {task.due_date?.slice(0, 10) || "Not specified"}
-              </p>
-              <p>Priority: {task.priority || "Medium"}</p>
-
-              <label>
-                Status
-                <select
-                  style={styles.input}
-                  value={task.status || "Pending"}
-                  onChange={(e) =>
-                    handleStatusChange(task.id, e.target.value)
-                  }
-                >
-                  <option>Pending</option>
-                  <option>In Progress</option>
-                  <option>Completed</option>
-                </select>
-              </label>
-
-              <button
-                type="button"
-                style={styles.deleteButton}
-                onClick={() => handleDelete(task.id)}
-              >
-                Delete Task
-              </button>
-            </article>
-          ))}
+      {error && (
+        <div className="feature-alert feature-error" role="alert">
+          {error}
         </div>
       )}
+
+      {success && (
+        <div className="feature-alert feature-success" role="status">
+          {success}
+        </div>
+      )}
+
+      <section className="stats task-stats">
+        <article className="stat-card">
+          <div className="stat-top">
+            Total tasks
+            <span className="stat-icon">▤</span>
+          </div>
+          <h2>{tasks.length}</h2>
+          <p>All assigned tasks</p>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-top">
+            Pending
+            <span className="stat-icon">◷</span>
+          </div>
+          <h2>{pending}</h2>
+          <p>Tasks waiting to start</p>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-top">
+            In progress
+            <span className="stat-icon">↻</span>
+          </div>
+          <h2>{inProgress}</h2>
+          <p>Tasks being worked on</p>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-top">
+            Completed
+            <span className="stat-icon">✓</span>
+          </div>
+          <h2>{completed}</h2>
+          <p>Finished tasks</p>
+        </article>
+      </section>
+
+      <section className="panel feature-form-panel">
+        <div className="feature-section-heading">
+          <div>
+            <h2>Create a task</h2>
+            <p>Add work and assign responsibility.</p>
+          </div>
+        </div>
+
+        <form className="feature-form-grid" onSubmit={handleSubmit}>
+          <label className="feature-field">
+            Task title *
+            <input
+              placeholder="Enter task title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+            />
+          </label>
+
+          <label className="feature-field">
+            Assigned to *
+            <input
+              placeholder="Enter member name"
+              value={assignedTo}
+              onChange={(event) => setAssignedTo(event.target.value)}
+              required
+            />
+          </label>
+
+          <label className="feature-field">
+            Due date
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+            />
+          </label>
+
+          <label className="feature-field">
+            Priority
+            <select
+              value={priority}
+              onChange={(event) => setPriority(event.target.value)}
+            >
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </label>
+
+          <div className="feature-form-actions">
+            <button className="primary" type="submit" disabled={saving}>
+              {saving ? "Creating..." : "+ Create task"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="panel feature-list-panel">
+        <div className="feature-section-heading">
+          <div>
+            <h2>Task list</h2>
+            <p>Update progress or remove a task.</p>
+          </div>
+          <span className="feature-count">{tasks.length} tasks</span>
+        </div>
+
+        {loading ? (
+          <p className="feature-empty">Loading tasks...</p>
+        ) : tasks.length === 0 ? (
+          <p className="feature-empty">No tasks created yet.</p>
+        ) : (
+          <div className="feature-card-grid">
+            {tasks.map((task) => (
+              <article className="feature-item-card" key={task.id}>
+                <div className="feature-item-top">
+                  <span
+                    className={`priority-badge priority-${String(
+                      task.priority || "Medium"
+                    ).toLowerCase()}`}
+                  >
+                    {task.priority || "Medium"} priority
+                  </span>
+
+                  <span className="feature-item-id">
+                    #{task.id}
+                  </span>
+                </div>
+
+                <h3>{task.title}</h3>
+
+                <div className="feature-item-details">
+                  <p>
+                    <span>Assigned to</span>
+                    <strong>{task.assigned_to || "Unassigned"}</strong>
+                  </p>
+
+                  <p>
+                    <span>Due date</span>
+                    <strong>
+                      {task.due_date
+                        ? String(task.due_date).slice(0, 10)
+                        : "Not specified"}
+                    </strong>
+                  </p>
+                </div>
+
+                <label className="feature-field task-status-field">
+                  Task status
+                  <select
+                    value={task.status || "Pending"}
+                    onChange={(event) =>
+                      handleStatusChange(task.id, event.target.value)
+                    }
+                  >
+                    <option>Pending</option>
+                    <option>In Progress</option>
+                    <option>Completed</option>
+                  </select>
+                </label>
+
+                <button
+                  className="danger-button"
+                  type="button"
+                  onClick={() => handleDelete(task.id)}
+                >
+                  Delete task
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
-
-const styles = {
-  form: {
-    display: "grid",
-    gap: "13px",
-    maxWidth: "550px",
-    padding: "20px",
-    margin: "20px 0 30px",
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-  },
-  input: {
-    display: "block",
-    width: "100%",
-    padding: "10px",
-    marginTop: "7px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    boxSizing: "border-box",
-  },
-  button: {
-    padding: "12px",
-    color: "#fff",
-    background: "#635bdb",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  deleteButton: {
-    padding: "10px",
-    marginTop: "12px",
-    color: "#b42318",
-    background: "#fff0f0",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "15px",
-  },
-  card: {
-    padding: "18px",
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-  },
-};

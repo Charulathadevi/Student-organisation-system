@@ -1,6 +1,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getMembers, addMember, updateMember } from "../services/api";
+import {
+  getMembers,
+  addMember,
+  updateMember,
+} from "../services/api";
 
 const money = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -11,8 +15,7 @@ const money = (value) =>
 
 const dateText = (value) => {
   if (!value) return "—";
-  const date = String(value).slice(0, 10);
-  return date;
+  return String(value).slice(0, 10);
 };
 
 export default function Members() {
@@ -37,6 +40,7 @@ export default function Members() {
   const loadMembers = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const data = await getMembers();
       setMembers(Array.isArray(data) ? data : []);
@@ -53,6 +57,7 @@ export default function Members() {
 
   const filteredMembers = useMemo(() => {
     const query = search.trim().toLowerCase();
+
     if (!query) return members;
 
     return members.filter((member) =>
@@ -63,29 +68,44 @@ export default function Members() {
         member.phone,
         member.membership_type,
         member.status,
-      ].some((value) => String(value || "").toLowerCase().includes(query))
+      ].some((value) =>
+        String(value || "").toLowerCase().includes(query)
+      )
     );
   }, [members, search]);
 
   const activeCount = members.filter(
-    (member) => String(member.status).toLowerCase() === "active"
+    (member) =>
+      String(member.status || "").toLowerCase() === "active"
   ).length;
 
   const expiredCount = members.filter(
-    (member) => String(member.status).toLowerCase() === "expired"
+    (member) =>
+      String(member.status || "").toLowerCase() === "expired"
   ).length;
 
   const income = members
-    .filter((member) => String(member.status).toLowerCase() === "active")
-    .reduce((sum, member) => sum + Number(member.fee || 0), 0);
+    .filter(
+      (member) =>
+        String(member.status || "").toLowerCase() === "active"
+    )
+    .reduce(
+      (sum, member) => sum + Number(member.fee || 0),
+      0
+    );
 
   function changeForm(event) {
     const { name, value } = event.target;
-    setForm((previous) => ({ ...previous, [name]: value }));
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setSaving(true);
     setError("");
     setSuccess("");
@@ -114,6 +134,7 @@ export default function Members() {
 
       setShowForm(false);
       setSuccess("Member registered successfully.");
+
       await loadMembers();
     } catch (err) {
       setError(err.message || "Unable to register member.");
@@ -123,112 +144,173 @@ export default function Members() {
   }
 
   async function handleExpire(member) {
-    if (String(member.status).toLowerCase() === "expired") return;
+    if (
+      String(member.status || "").toLowerCase() === "expired"
+    ) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Mark ${member.name}'s membership as expired?`
     );
+
     if (!confirmed) return;
 
     setError("");
     setSuccess("");
 
     try {
-      await updateMember(member.id, { status: "Expired" });
+      await updateMember(member.id, {
+        status: "Expired",
+      });
+
       setSuccess(`${member.name}'s membership was expired.`);
+
       await loadMembers();
     } catch (err) {
-      setError(err.message || "Unable to update membership status.");
+      setError(
+        err.message || "Unable to update membership status."
+      );
     }
+  }
+
+  function toggleForm() {
+    setShowForm((previous) => !previous);
   }
 
   return (
     <div className="members-page">
-      <header className="members-topbar">
-        <div>
-          <h2>Members</h2>
-          <p>Manage your club in one place</p>
-        </div>
-        <div className="admin-profile">
-          <span className="admin-avatar">SA</span>
-          <span>
-            <strong>Club Admin</strong>
-            <small>Administrator</small>
-          </span>
-        </div>
-      </header>
-
-      <section className="members-content">
-        <div className="members-intro">
+      <main className="members-content">
+        {/* Page heading */}
+        <section className="members-intro">
           <div>
-            <p className="members-brand">SKYLINE STUDENT ASSOCIATION</p>
+            <p className="members-brand">
+              SKYLINE STUDENT ASSOCIATION
+            </p>
+
             <h1>Members</h1>
+
             <p className="members-subtitle">
               Register students, track dues, and verify membership.
             </p>
           </div>
-          <button className="primary-button" onClick={() => setShowForm(!showForm)}>
-            + Add member
-          </button>
-        </div>
 
+          <button
+            type="button"
+            className="primary-button"
+            onClick={toggleForm}
+          >
+            {showForm ? "Cancel" : "+ Add member"}
+          </button>
+        </section>
+
+        {/* Statistics */}
         <section className="member-stats">
           <article className="member-stat">
-            <div className="stat-label">All members <span>♟</span></div>
+            <div className="stat-label">
+              <span>♟</span>
+              All members
+            </div>
+
             <strong>{members.length}</strong>
-            <small>Updated from database</small>
+
+            <small>Registered members</small>
           </article>
+
           <article className="member-stat">
-            <div className="stat-label">Active <span>✓</span></div>
+            <div className="stat-label">
+              <span>✓</span>
+              Active
+            </div>
+
             <strong>{activeCount}</strong>
+
             <small>Active memberships</small>
           </article>
+
           <article className="member-stat">
-            <div className="stat-label">Expired <span>◷</span></div>
+            <div className="stat-label">
+              <span>◷</span>
+              Expired
+            </div>
+
             <strong>{expiredCount}</strong>
+
             <small>Expired memberships</small>
           </article>
+
           <article className="member-stat">
-            <div className="stat-label">Membership income <span>₹</span></div>
+            <div className="stat-label">
+              <span>₹</span>
+              Membership income
+            </div>
+
             <strong>{money(income)}</strong>
+
             <small>Fees for active members</small>
           </article>
         </section>
 
-        {error && <div className="members-alert error-alert">{error}</div>}
-        {success && <div className="members-alert success-alert">{success}</div>}
+        {/* Feedback messages */}
+        {error && (
+          <div className="members-alert error-alert" role="alert">
+            {error}
+          </div>
+        )}
 
+        {success && (
+          <div
+            className="members-alert success-alert"
+            role="status"
+          >
+            {success}
+          </div>
+        )}
+
+        {/* Add member form */}
         {showForm && (
           <form className="member-form" onSubmit={handleSubmit}>
             <div className="form-heading">
               <div>
                 <h2>Register member</h2>
-                <p>Enter the student's membership details.</p>
+                <p>
+                  Enter the student's membership details below.
+                </p>
               </div>
+
               <button
                 type="button"
                 className="close-button"
                 onClick={() => setShowForm(false)}
-                aria-label="Close form"
+                aria-label="Close registration form"
               >
-                ✕
+                ×
               </button>
             </div>
 
             <div className="member-form-grid">
               <label>
                 Full name *
-                <input name="name" value={form.name} onChange={changeForm} required />
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={changeForm}
+                  placeholder="Enter full name"
+                  required
+                />
               </label>
+
               <label>
                 Student ID *
                 <input
                   name="student_id"
                   value={form.student_id}
                   onChange={changeForm}
+                  placeholder="Enter student ID"
                   required
                 />
               </label>
+
               <label>
                 Email *
                 <input
@@ -236,13 +318,22 @@ export default function Members() {
                   type="email"
                   value={form.email}
                   onChange={changeForm}
+                  placeholder="student@example.com"
                   required
                 />
               </label>
+
               <label>
                 Phone
-                <input name="phone" value={form.phone} onChange={changeForm} />
+                <input
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={changeForm}
+                  placeholder="Enter phone number"
+                />
               </label>
+
               <label>
                 Membership type
                 <select
@@ -250,12 +341,13 @@ export default function Members() {
                   value={form.membership_type}
                   onChange={changeForm}
                 >
-                  <option>Standard</option>
-                  <option>Premium</option>
-                  <option>Student</option>
-                  <option>Lifetime</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Premium">Premium</option>
+                  <option value="Student">Student</option>
+                  <option value="Lifetime">Lifetime</option>
                 </select>
               </label>
+
               <label>
                 Membership fee (₹) *
                 <input
@@ -268,6 +360,7 @@ export default function Members() {
                   required
                 />
               </label>
+
               <label>
                 Expiry date
                 <input
@@ -279,31 +372,33 @@ export default function Members() {
               </label>
             </div>
 
-            <button className="primary-button" disabled={saving} type="submit">
+            <button
+              className="primary-button"
+              disabled={saving}
+              type="submit"
+            >
               {saving ? "Registering..." : "Register member"}
             </button>
           </form>
         )}
 
+        {/* Members table */}
         <section className="members-table-card">
           <div className="members-toolbar">
             <input
               className="members-search"
               type="search"
-              placeholder="Search by name, student ID, or email..."
+              placeholder="Search by name, student ID, email, or phone..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              aria-label="Search members"
             />
-            <button
-              className="primary-button"
-              onClick={() => setShowForm(!showForm)}
-            >
-              + Register member
-            </button>
           </div>
 
           {loading ? (
-            <p className="members-message">Loading members...</p>
+            <p className="members-message">
+              Loading members...
+            </p>
           ) : (
             <div className="members-table-scroll">
               <table className="members-table">
@@ -318,49 +413,71 @@ export default function Members() {
                     <th>Action</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {filteredMembers.map((member) => (
-                    <tr key={member.id}>
-                      <td>
-                        <strong>{member.name}</strong>
-                        <small>{member.student_id}</small>
-                      </td>
-                      <td>
-                        <span>{member.email}</span>
-                        <small>{member.phone || "—"}</small>
-                      </td>
-                      <td>{member.membership_type || "Standard"}</td>
-                      <td>{money(member.fee)}</td>
-                      <td>
-                        <span
-                          className={`member-status ${
-                            String(member.status).toLowerCase() === "active"
-                              ? "status-active"
-                              : "status-expired"
-                          }`}
-                        >
-                          {member.status || "Unknown"}
-                        </span>
-                      </td>
-                      <td>{dateText(member.expiry_date)}</td>
-                      <td>
-                        <button
-                          className="expire-button"
-                          disabled={
-                            String(member.status).toLowerCase() === "expired"
-                          }
-                          onClick={() => handleExpire(member)}
-                        >
-                          {String(member.status).toLowerCase() === "expired"
-                            ? "Expired"
-                            : "Expire"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredMembers.map((member) => {
+                    const isExpired =
+                      String(member.status || "").toLowerCase() ===
+                      "expired";
+
+                    return (
+                      <tr key={member.id}>
+                        <td>
+                          <strong>{member.name || "Unnamed"}</strong>
+                          <small>
+                            {member.student_id || "No student ID"}
+                          </small>
+                        </td>
+
+                        <td>
+                          <span>{member.email || "—"}</span>
+                          <small>{member.phone || "No phone"}</small>
+                        </td>
+
+                        <td>
+                          {member.membership_type || "Standard"}
+                        </td>
+
+                        <td>{money(member.fee)}</td>
+
+                        <td>
+                          <span
+                            className={`member-status ${
+                              isExpired
+                                ? "status-expired"
+                                : String(
+                                    member.status || ""
+                                  ).toLowerCase() === "active"
+                                ? "status-active"
+                                : "status-expired"
+                            }`}
+                          >
+                            {member.status || "Unknown"}
+                          </span>
+                        </td>
+
+                        <td>{dateText(member.expiry_date)}</td>
+
+                        <td>
+                          <button
+                            type="button"
+                            className="expire-button"
+                            disabled={isExpired}
+                            onClick={() => handleExpire(member)}
+                          >
+                            {isExpired ? "Expired" : "Expire"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+
                   {filteredMembers.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="members-empty">
+                      <td
+                        colSpan={7}
+                        className="members-empty"
+                      >
                         {search
                           ? "No members match your search."
                           : "No members registered yet."}
@@ -372,7 +489,7 @@ export default function Members() {
             </div>
           )}
         </section>
-      </section>
+      </main>
     </div>
   );
 }
