@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skyline Student Association</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Skyline Student Association</h1>
+    <p>Student Organization Management System</p>
+  </header>
+
+  <nav>
+    <button onclick="showSection('dashboard')">Dashboard</button>
+    <button onclick="showSection('members')">Members</button>
+    <button onclick="showSection('events')">Events</button>
+    <button onclick="showSection('announcements')">Announcements</button>
+    <button onclick="showSection('merchandise')">Merchandise</button>
+    <button onclick="showSection('fundraisers')">Fundraisers</button>
+    <button onclick="showSection('volunteers')">Volunteers</button>
+    <button onclick="showSection('finance')">Finance</button>
+  </nav>
+
+  <main>
+    <section id="dashboard" class="page">
+      <h2>Dashboard</h2>
+      <div class="cards">
+        <article><h3>Total Members</h3><p id="memberCount">0</p></article>
+        <article><h3>Upcoming Events</h3><p id="eventCount">0</p></article>
+        <article><h3>Total Income</h3><p id="income">₹0</p></article>
+        <article><h3>Total Expenses</h3><p id="expenses">₹0</p></article>
+      </div>
+      <h3>Organization Balance</h3>
+      <p id="balance">₹0</p>
+    </section>
+
+    <section id="members" class="page hidden">
+      <h2>Membership Management</h2>
+      <form id="memberForm">
+        <input id="memberName" placeholder="Student name" required>
+        <input id="memberEmail" type="email" placeholder="Email address" required>
+        <button type="submit">Register Member</button>
+      </form>
+      <ul id="memberList"></ul>
+    </section>
+
+    <section id="events" class="page hidden">
+      <h2>Events and Tickets</h2>
+      <form id="eventForm">
+        <input id="eventName" placeholder="Event name" required>
+        <input id="ticketPrice" type="number" min="0" placeholder="Ticket price (₹)" required>
+        <input id="ticketCapacity" type="number" min="1" placeholder="Ticket capacity" required>
+        <button type="submit">Create Event</button>
+      </form>
+      <div id="eventList"></div>
+    </section>
+
+    <section id="announcements" class="page hidden">
+      <h2>Announcements</h2>
+      <form id="announcementForm">
+        <input id="announcementTitle" placeholder="Announcement title" required>
+        <textarea id="announcementMessage" placeholder="Message" required></textarea>
+        <button type="submit">Publish Announcement</button>
+      </form>
+      <ul id="announcementList"></ul>
+    </section>
+
+    <section id="merchandise" class="page hidden">
+      <h2>Merchandise Store</h2>
+      <form id="productForm">
+        <input id="productName" placeholder="Product name" required>
+        <input id="productPrice" type="number" min="0" placeholder="Price (₹)" required>
+        <input id="productStock" type="number" min="0" placeholder="Stock quantity" required>
+        <button type="submit">Add Product</button>
+      </form>
+      <div id="productList"></div>
+    </section>
+
+    <section id="fundraisers" class="page hidden">
+      <h2>Fundraisers</h2>
+      <form id="fundraiserForm">
+        <input id="fundraiserName" placeholder="Fundraiser name" required>
+        <input id="fundraiserTarget" type="number" min="1" placeholder="Target amount (₹)" required>
+        <button type="submit">Create Fundraiser</button>
+      </form>
+      <div id="fundraiserList"></div>
+    </section>
+
+    <section id="volunteers" class="page hidden">
+      <h2>Volunteer Tasks</h2>
+      <form id="taskForm">
+        <input id="taskName" placeholder="Task description" required>
+        <input id="taskAssignee" placeholder="Assigned volunteer" required>
+        <button type="submit">Assign Task</button>
+      </form>
+      <ul id="taskList"></ul>
+    </section>
+
+    <section id="finance" class="page hidden">
+      <h2>Finance Management</h2>
+      <form id="financeForm">
+        <input id="transactionDescription" placeholder="Transaction description" required>
+        <input id="transactionAmount" type="number" min="0.01" step="0.01" placeholder="Amount (₹)" required>
+        <select id="transactionType">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <button type="submit">Record Transaction</button>
+      </form>
+      <ul id="transactionList"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Skyline Student Association | Hackathon Prototype</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
