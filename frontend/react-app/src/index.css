@@ -1,0 +1,56 @@
+
+/* Global CSS reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Main page styling */
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f6fb;
+  color: #14213d;
+}
+
+/* React root */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Buttons and form elements */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Form fields */
+input,
+select,
+textarea {
+  outline: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  display: block;
+}
