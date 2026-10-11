@@ -1,11 +1,16 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import {
   getTasks,
   addTask,
   updateTaskStatus,
   deleteTask,
 } from "../services/api";
+
+const VALID_STATUSES = ["Pending", "In Progress", "Completed"];
+
+const PRIORITIES = ["Low", "Medium", "High"];
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -18,7 +23,7 @@ export default function Tasks() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function loadTasks() {
+  const loadTasks = useCallback(async () => {
     try {
       const data = await getTasks();
       setTasks(Array.isArray(data) ? data : []);
@@ -28,17 +33,29 @@ export default function Tasks() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setSaving(true);
+
     setError("");
     setSuccess("");
+
+    if (!title.trim() || !assignedTo.trim()) {
+      setError("Please enter the task title and assigned member.");
+      return;
+    }
+
+    if (!PRIORITIES.includes(priority)) {
+      setError("Please select a valid priority.");
+      return;
+    }
+
+    setSaving(true);
 
     try {
       await addTask({
@@ -53,7 +70,9 @@ export default function Tasks() {
       setAssignedTo("");
       setDueDate("");
       setPriority("Medium");
+
       setSuccess("Task created successfully.");
+
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to create task.");
@@ -63,12 +82,19 @@ export default function Tasks() {
   }
 
   async function handleStatusChange(id, status) {
+    if (!VALID_STATUSES.includes(status)) {
+      setError("Invalid status selected.");
+      return;
+    }
+
     setError("");
     setSuccess("");
 
     try {
       await updateTaskStatus(id, status);
-      setSuccess("Task status updated.");
+
+      setSuccess("Task status updated successfully.");
+
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to update task.");
@@ -85,7 +111,9 @@ export default function Tasks() {
 
     try {
       await deleteTask(id);
+
       setSuccess("Task deleted successfully.");
+
       await loadTasks();
     } catch (err) {
       setError(err.message || "Unable to delete task.");
@@ -164,6 +192,7 @@ export default function Tasks() {
         </article>
       </section>
 
+      {/* Create task */}
       <section className="panel feature-form-panel">
         <div className="feature-section-heading">
           <div>
@@ -179,6 +208,7 @@ export default function Tasks() {
               placeholder="Enter task title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
+              maxLength={200}
               required
             />
           </label>
@@ -193,14 +223,21 @@ export default function Tasks() {
             />
           </label>
 
-          <label className="feature-field">
-            Due date
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-            />
-          </label>
+          
+<label className="feature-field">
+  Due date
+  <input
+    type="date"
+    min={new Date(
+      Date.now() - new Date().getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 10)}
+    value={dueDate}
+    onChange={(event) => setDueDate(event.target.value)}
+  />
+</label>
+
 
           <label className="feature-field">
             Priority
@@ -208,27 +245,35 @@ export default function Tasks() {
               value={priority}
               onChange={(event) => setPriority(event.target.value)}
             >
-              <option>Low</option>
-              <option>Medium</option>
-              <option>High</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
             </select>
           </label>
 
           <div className="feature-form-actions">
-            <button className="primary" type="submit" disabled={saving}>
+            <button
+              className="primary"
+              type="submit"
+              disabled={saving}
+            >
               {saving ? "Creating..." : "+ Create task"}
             </button>
           </div>
         </form>
       </section>
 
+      {/* Task list */}
       <section className="panel feature-list-panel">
         <div className="feature-section-heading">
           <div>
             <h2>Task list</h2>
             <p>Update progress or remove a task.</p>
           </div>
-          <span className="feature-count">{tasks.length} tasks</span>
+
+          <span className="feature-count">
+            {tasks.length} tasks
+          </span>
         </div>
 
         {loading ? (
@@ -237,63 +282,77 @@ export default function Tasks() {
           <p className="feature-empty">No tasks created yet.</p>
         ) : (
           <div className="feature-card-grid">
-            {tasks.map((task) => (
-              <article className="feature-item-card" key={task.id}>
-                <div className="feature-item-top">
-                  <span
-                    className={`priority-badge priority-${String(
-                      task.priority || "Medium"
-                    ).toLowerCase()}`}
+            {tasks.map((task) => {
+              const taskPriority = PRIORITIES.includes(task.priority)
+                ? task.priority
+                : "Medium";
+
+              const taskStatus = VALID_STATUSES.includes(task.status)
+                ? task.status
+                : "Pending";
+
+              return (
+                <article className="feature-item-card" key={task.id}>
+                  <div className="feature-item-top">
+                    <span
+                      className={`priority-badge priority-${taskPriority.toLowerCase()}`}
+                    >
+                      {taskPriority} priority
+                    </span>
+
+                    <span className="feature-item-id">
+                      #{task.id}
+                    </span>
+                  </div>
+
+                  <h3>{task.title}</h3>
+
+                  <div className="feature-item-details">
+                    <p>
+                      <span>Assigned to</span>
+                      <strong>
+                        {task.assigned_to || "Unassigned"}
+                      </strong>
+                    </p>
+
+                    <p>
+                      <span>Due date</span>
+                      <strong>
+                        {task.due_date
+                          ? String(task.due_date).slice(0, 10)
+                          : "Not specified"}
+                      </strong>
+                    </p>
+                  </div>
+
+                  <label className="feature-field task-status-field">
+                    Task status
+
+                    <select
+                      value={taskStatus}
+                      onChange={(event) =>
+                        handleStatusChange(
+                          task.id,
+                          event.target.value
+                        )
+                      }
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </label>
+
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={() => handleDelete(task.id)}
                   >
-                    {task.priority || "Medium"} priority
-                  </span>
-
-                  <span className="feature-item-id">
-                    #{task.id}
-                  </span>
-                </div>
-
-                <h3>{task.title}</h3>
-
-                <div className="feature-item-details">
-                  <p>
-                    <span>Assigned to</span>
-                    <strong>{task.assigned_to || "Unassigned"}</strong>
-                  </p>
-
-                  <p>
-                    <span>Due date</span>
-                    <strong>
-                      {task.due_date
-                        ? String(task.due_date).slice(0, 10)
-                        : "Not specified"}
-                    </strong>
-                  </p>
-                </div>
-
-                <label className="feature-field task-status-field">
-                  Task status
-                  <select
-                    value={task.status || "Pending"}
-                    onChange={(event) =>
-                      handleStatusChange(task.id, event.target.value)
-                    }
-                  >
-                    <option>Pending</option>
-                    <option>In Progress</option>
-                    <option>Completed</option>
-                  </select>
-                </label>
-
-                <button
-                  className="danger-button"
-                  type="button"
-                  onClick={() => handleDelete(task.id)}
-                >
-                  Delete task
-                </button>
-              </article>
-            ))}
+                    Delete task
+                  </button>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
